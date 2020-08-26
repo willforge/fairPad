@@ -2,6 +2,8 @@
 <!-- vim: ts=4
 
   THIS IS THE DEBUG VERSION !!!
+
+ note: like is equivalent to a pin (i.e. there is no counting!)
 -->
 <html>
     <head>
@@ -20,8 +22,10 @@
 	<h3>This is our fairPad</h3>
 	load locally from: <input id=local_load.file name=filename type=file>
 	<button class=local_load onclick=local_load(event)>local load</button>
+	<button id=like onclick=like(event)>like</button>
+	<button id=pin onclick=pin(event)>pin</button>
 <br>
-	<textarea id=pad_content>
+	<textarea id=pad_content onchange=getstatus(event)>
 ceci est un texte
 
 
@@ -30,9 +34,12 @@ ceci est un texte
 <br>
 	save locally to: <input id=local_save.file_path name=localpath type=text value="pad_content.txt" placeholder="file-location-to-be-saved-to">
 	<button id=save onclick=local_save(event)>local save</button>
+<br>
+    load from ipfs: <input id=ipfs_load.hash name=ipfshash type=text value="QmfStezxKk8KXj85mBWCfRNrYZRFeWYKB3yi9CDKjuJ95c" placeholder="ipfs-hash-to-be-loaded-from">
+	<button id=load onclick=ipfs_load(event)>ipfs load</button>
+<br>
+    save to ipfs: <span id=ipfs_save.hash></span>
 	<button id=ipfs onclick=ipfs_save(event)>ipfs save</button>
-	<button id=like onclick=like(event)>like</button>
-	<button id=pin onclick=pin(event)>pin</button>
 <br><br>
 	load from mfs: <input id=file_mfs_path_load name=mfspathload type=text value="/etc/myfile.txt" placeholder="file-to-be-loaded-from-mfs">
 	<button id=load onclick=mfs_load(event)>mfs load</button>
@@ -45,9 +52,48 @@ ceci est un texte
 
 <script>
 
+async function like(ev) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.ev:',ev);
+     let hash = await ipfs_save();
+     console.debug(callee+'.hash:',hash)
+     let json = await ipfsPinAdd(hash)
+     console.debug(callee+'.json:',json)
+     let button = ev.target
+         button.innerHTML = 'liked'
+ 
+ }
+
+async function getstatus(ev) {
+     let [callee, caller] = functionNameJS();
+     let textData = document.getElementById('pad_content').value;
+     let hash = await ipfsGetContentHash(textData);
+     let span = document.getElementById('ipfs_save.hash')
+         span.innerHTML = ''; // <a href=http://127.0.0.1:8080/ipfs/'+hash+'>'+hash+'</a>';
+     console.debug(callee+'hash:',hash)
+
+     let liked = await getPinStatus(hash);
+     console.log(callee+'liked:',liked)
+
+     let button = document.getElementById('like')
+         button.innerHTML = liked.replace('recursive','liked?')
+         if (liked == 'liked') {
+           button.onclick = unlike; 
+         } else {
+           button.onclick = { event => like(event) }; 
+         }
+
+
+}
+async function unlike(ev) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.ev:',ev);
+
+}
+
  function pin(ev) {
      let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.ev:',ev);
+     console.debug(callee+'.input.ev:',ev);
 
      let publicKey = 'pinata' 
      let pinata_api_key = '478cecf4b06ce9e7eaeb';
@@ -116,6 +162,24 @@ async function local_load(ev) {
      let file_path = document.getElementById('local_save.file_path').value;
      let textData = document.getElementById('pad_content').value;
      download(textData, file_path, 'text/plain');
+ }
+
+async function ipfs_load(ev) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.ev:',ev);
+     let hash = document.getElementById('ipfs_load.hash').value;
+     let content = await ipfsGetHashContent(hash)
+     document.getElementById('pad_content').value = content;
+ }
+async function ipfs_save(ev) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.ev:',ev);
+     let textData = document.getElementById('pad_content').value;
+     let hash = await ipfsAddBinaryContent(textData);
+     let span = document.getElementById('ipfs_save.hash')
+         span.innerHTML = '<a href=http://127.0.0.1:8080/ipfs/'+hash+'>'+hash+'</a>';
+     console.debug(callee+'.span:',span);
+     return hash
  }
 
  function mfs_save(ev) {
