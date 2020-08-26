@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <!-- vim: ts=4
+
+  THIS IS THE MASTER VERSION !!!
 -->
 <html>
     <head>
@@ -44,8 +46,6 @@ ceci est un texte
 <script>
 
  function pin(ev) {
-     let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.ev:',ev);
 
      let publicKey = 'pinata' 
      let pinata_api_key = '478cecf4b06ce9e7eaeb';
@@ -54,20 +54,13 @@ ceci est un texte
      let textData = document.getElementById('pad_content').value;
      let qm = ipfsGetContentHash(textData);
      let status = pinByHash(pinata_api_key,pinata_secret_api_key,qm)
-     console.log(callee+'status:',status)
  }
 
  function DH_secret(pubkey) {
-     let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.pubkey:',pubkey);
      console.error('TBD');
  }
 
  async function pinByHash(pinataApiKey, pinataSecretApiKey, hashToPin) {
-     let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.pinataApiKey:',pinataApiKey);
-     console.log(callee+'.input.pinataSecretApiKey:',pinataSecretApiKey);
-     console.log(callee+'.input.hashToPin:',hashToPin);
      
      const url = `https://api.pinata.cloud/pinning/pinByHash`;
      const body = {
@@ -98,7 +91,6 @@ ceci est un texte
  }
 
 async function local_load(ev) {
-   let [callee, caller] = functionNameJS();
    let file = document.getElementById('local_load.file').files[0];
    let pad_content = await readAsText(file);
    document.getElementById('pad_content').value = pad_content;
@@ -106,8 +98,6 @@ async function local_load(ev) {
  }
 
  function local_save(ev) {
-     let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.ev:',ev);
 
      let file_path = document.getElementById('local_save.file_path').value;
      let textData = document.getElementById('pad_content').value;
@@ -115,28 +105,20 @@ async function local_load(ev) {
  }
 
  function mfs_save(ev) {
-     let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.ev:',ev);
 
      let file_mfs_path_save = document.getElementById('file_mfs_path_save').value;
-     console.debug(callee+'.file_mfs_path_save:',file_mfs_path_save);
      
      let pad_content = document.getElementById('pad_content').value;
-     console.debug(callee+'.pad_content:',pad_content);
      
      return ipfsWriteText(file_mfs_path_save, pad_content) // v0.6.0 truncate works !!!
 	 .then ( hash => {
-	     console.log(callee+'.file_mfs_path_save: '+file_mfs_path_save+' updated (hash: '+hash+')')
 	 })
 	 .catch(err => console.error(err))
  } 
  
  async function mfs_load(ev) {
-     let [callee, caller] = functionNameJS();
-     console.debug(callee+'.input.ev:',ev);
 
      let file_mfs_path_load = document.getElementById('file_mfs_path_load').value;
-     console.debug(callee+'.file_mfs_path_load:',file_mfs_path_load);
 
      let content;
      if ( file_mfs_path_load.match(new RegExp('/ip[fn]s/')) ) {
@@ -144,18 +126,12 @@ async function local_load(ev) {
      } else {
 	 content = await getContentofMfsPath(file_mfs_path_load);
      }
-     console.debug(callee+'.content:',content);
 
      let ele = document.getElementById('pad_content');
-     console.debug(callee+'.ele:',ele);
      ele.value = content;
  }
 
  function download(content, fileName, contentType) {
-     let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.content:',content);
-     console.log(callee+'.input.fileName:',fileName);
-     console.log(callee+'.input.contentType:',contentType);
 
      var a = document.createElement("a");
      var file = new Blob([content], {type: contentType});
