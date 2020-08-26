@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<!-- vim: ts=4
+-->
+<html>
+    <head>
+	<meta charset="utf-8">
+	<title>Fair Pad Management</title>
+	<link rel="stylesheet" href="style.css">
+
+	<script src="js/sha256.js"></script>
+	<script src="js/essential.js"></script>
+	<script src="js/ipfs.js"></script>
+	<script src="js/functions.js"></script>
+    </head>
+
+    <body>
+
+	<h3>This is our fairPad</h3>
+	load locally from: <input id=local_load.file name=filename type=file>
+	<button class=local_load onclick=local_load(event)>local load</button>
+<br>
+	<textarea id=pad_content rows=5 cols=78>
+ceci est un texte
+
+
+
+	</textarea>
+<br>
+	save locally to: <input id=local_save.file_path name=localpath type=text value="pad_content.txt" placeholder="file-location-to-be-saved-to">
+	<button id=save onclick=local_save(event)>local save</button>
+	<button id=ipfs onclick=ipfs_save(event)>ipfs save</button>
+	<button id=like onclick=like(event)>like</button>
+	<button id=pin onclick=pin(event)>pin</button>
+<br><br>
+	load from mfs: <input id=file_mfs_path_load name=mfspathload type=text value="/etc/myfile.txt" placeholder="file-to-be-loaded-from-mfs">
+	<button id=load onclick=mfs_load(event)>mfs load</button>
+<br>
+	save to mfs: <input id=file_mfs_path_save name=mfspath type=text value="/etc/myfile.txt" placeholder="mfs-file-location-to-be-saved-to">
+	<button id=mfs onclick=mfs_save(event)>mfs save</button>
+
+    </body>
+</html>
+
+<script>
+
+ function pin(ev) {
+     let [callee, caller] = functionNameJS();
+     console.log(callee+'.input.ev:',ev);
+
+     let publicKey = 'pinata' 
+     let pinata_api_key = '478cecf4b06ce9e7eaeb';
+     let pinata_secret_xor_key = 'abc';
+     let pinata_secret_api_key = pinata_secret_xor_key ^ DH_secret(publicKey);
+     let textData = document.getElementById('pad_content').value;
+     let qm = ipfsGetContentHash(textData);
+     let status = pinByHash(pinata_api_key,pinata_secret_api_key,qm)
+     console.log(callee+'status:',status)
+ }
+
+ function DH_secret(pubkey) {
+     let [callee, caller] = functionNameJS();
+     console.log(callee+'.input.pubkey:',pubkey);
+     console.error('TBD');
+ }
+
+ async function pinByHash(pinataApiKey, pinataSecretApiKey, hashToPin) {
+     let [callee, caller] = functionNameJS();
+     console.log(callee+'.input.pinataApiKey:',pinataApiKey);
+     console.log(callee+'.input.pinataSecretApiKey:',pinataSecretApiKey);
+     console.log(callee+'.input.hashToPin:',hashToPin);
+     
+     const url = `https://api.pinata.cloud/pinning/pinByHash`;
+     const body = {
+	 hashToPin: hashToPin,
+	 host_nodes: [
+	     '/ip6/2a02:120b:c3c7:7a40:34d6:1935:cdec:81fa/tcp/4001',
+	     '/ip6/2a02:120b:c3c7:7a40:953d:9b46:ba8:ea2f/tcp/4001'
+	 ],
+	 pinataMetadata: {
+	     name: 'pad_content',
+	     keyvalues: {
+		 origin: 'fairpad',
+	     }
+	 }
+     };
+     let headers= {
+	 'pinata_api_key': pinataApiKey,
+	 'pinata_secret_api_key': pinataSecretApiKey
+     }
+
+     return fetch(url,{ headers: headers, method: 'POST'} )
+	 .then(function (response) {
+	     //handle response here
+	 })
+	 .catch(function (error) {
+	     //handle error here
+	 });
+ }
+
+async function local_load(ev) {
+   let [callee, caller] = functionNameJS();
+   let file = document.getElementById('local_load.file').files[0];
+   let pad_content = await readAsText(file);
+   document.getElementById('pad_content').value = pad_content;
+   return pad_content;
+ }
+
+ function local_save(ev) {
+     let [callee, caller] = functionNameJS();
+     console.log(callee+'.input.ev:',ev);
+
+     let file_path = document.getElementById('local_save.file_path').value;
+     let textData = document.getElementById('pad_content').value;
+     download(textData, file_path, 'text/plain');
+ }
+
+ function mfs_save(ev) {
+     let [callee, caller] = functionNameJS();
+     console.log(callee+'.input.ev:',ev);
+
+     let file_mfs_path_save = document.getElementById('file_mfs_path_save').value;
+     console.debug(callee+'.file_mfs_path_save:',file_mfs_path_save);
+     
+     let pad_content = document.getElementById('pad_content').value;
+     console.debug(callee+'.pad_content:',pad_content);
+     
+     return ipfsWriteText(file_mfs_path_save, pad_content) // v0.6.0 truncate works !!!
+	 .then ( hash => {
+	     console.log(callee+'.file_mfs_path_save: '+file_mfs_path_save+' updated (hash: '+hash+')')
+	 })
+	 .catch(err => console.error(err))
+ } 
+ 
+ async function mfs_load(ev) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.ev:',ev);
+
+     let file_mfs_path_load = document.getElementById('file_mfs_path_load').value;
+     console.debug(callee+'.file_mfs_path_load:',file_mfs_path_load);
+
+     let content;
+     if ( file_mfs_path_load.match(new RegExp('/ip[fn]s/')) ) {
+	 content = await getContentofIpfsPath(file_mfs_path_load);
+     } else {
+	 content = await getContentofMfsPath(file_mfs_path_load);
+     }
+     console.debug(callee+'.content:',content);
+
+     let ele = document.getElementById('pad_content');
+     console.debug(callee+'.ele:',ele);
+     ele.value = content;
+ }
+
+ function download(content, fileName, contentType) {
+     let [callee, caller] = functionNameJS();
+     console.log(callee+'.input.content:',content);
+     console.log(callee+'.input.fileName:',fileName);
+     console.log(callee+'.input.contentType:',contentType);
+
+     var a = document.createElement("a");
+     var file = new Blob([content], {type: contentType});
+     a.href = URL.createObjectURL(file);
+     a.download = fileName;
+     a.click();
+ }
+
+</script>
