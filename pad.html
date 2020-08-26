@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <!-- vim: ts=4
+
+  THIS IS THE DEBUG VERSION !!!
 -->
 <html>
     <head>
@@ -99,8 +101,10 @@ ceci est un texte
 
 async function local_load(ev) {
    let [callee, caller] = functionNameJS();
+   console.debug(callee+'.input.ev:',ev);
    let file = document.getElementById('local_load.file').files[0];
    let pad_content = await readAsText(file);
+   console.debug(callee+'.pad_content:',pad_content);
    document.getElementById('pad_content').value = pad_content;
    return pad_content;
  }
