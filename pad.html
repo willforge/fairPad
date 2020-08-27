@@ -61,8 +61,20 @@ async function like(ev) {
      console.debug(callee+'.json:',json)
      let button = ev.target
          button.innerHTML = 'liked'
+         button.onclick = event => { unlike(event) }; 
  
  }
+async function unlike(ev) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.ev:',ev);
+     let textData = document.getElementById('pad_content').value;
+     let hash = await ipfsGetContentHash(textData);
+     let json = await ipfsPinRm(hash)
+     console.debug(callee+'.json:',json)
+     let button = ev.target
+         button.innerHTML = 'like'
+         button.onclick = event => { like(event) }; 
+}
 
 async function getstatus(ev) {
      let [callee, caller] = functionNameJS();
@@ -73,21 +85,19 @@ async function getstatus(ev) {
      console.debug(callee+'hash:',hash)
 
      let liked = await getPinStatus(hash);
-     console.log(callee+'liked:',liked)
+     console.debug(callee+'.liked:',liked)
 
      let button = document.getElementById('like')
-         button.innerHTML = liked.replace('recursive','liked?')
-         if (liked == 'liked') {
+         if (liked == 'liked' || liked == 'recursive') {
            button.onclick = unlike; 
+           console.debug(callee+'.button (liked):',button)
+           console.dir(button)
          } else {
-           button.onclick = { event => like(event) }; 
+           button.onclick = event => { like(event) }; 
+           console.debug(callee+'.button (unlike):',button)
          }
+         button.innerHTML = liked.replace('recursive','liked')
 
-
-}
-async function unlike(ev) {
-     let [callee, caller] = functionNameJS();
-     console.debug(callee+'.input.ev:',ev);
 
 }
 
