@@ -280,7 +280,17 @@ async function getPinataStatus(hash) {
     })
    .then( json => {
       console.debug(callee+'.json:',json);
-      return json
+      let status;
+      if (json.count > 0) {
+         if (typeof(json.rows[0].date_unpinned) != 'undefined') {
+           status = 'unpinned';
+         } else if (typeof(json.rows[0].date_pinned) != 'undefined') {
+           status = 'pinned';
+         }
+      } else {
+        status = 'unpinned';
+      }
+      return status;
    })
    .catch(console.error)
 
