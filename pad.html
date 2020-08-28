@@ -25,7 +25,7 @@
 	<button id=like onclick=like(event)>like</button>
 	<button id=pin onclick=pin(event)>pin</button>
 <br>
-	<textarea id=pad_content onchange=getstatus(event)>
+	<textarea id=pad_content onchange="get_status(event)">
 ceci est un texte
 
 
@@ -52,6 +52,16 @@ ceci est un texte
 
 <script>
 
+/*
+const publicKey = 'pinata' 
+const pinata_secret_xor_key = 'abc';
+const pinata_secret_api_key = pinata_secret_xor_key ^ DH_secret(publicKey);
+*/
+var KEYPAIR;
+get_api_keys('data.json').then(
+ keys => { KEYPAIR = keys })
+
+
 async function like(ev) {
      let [callee, caller] = functionNameJS();
      console.debug(callee+'.input.ev:',ev);
@@ -76,13 +86,19 @@ async function unlike(ev) {
          button.onclick = event => { like(event) }; 
 }
 
-async function getstatus(ev) {
+async function get_status(ev) {
+  let [callee, caller] = functionNameJS();
+  let textData = document.getElementById('pad_content').value;
+  let hash = await ipfsGetContentHash(textData);
+  let span = document.getElementById('ipfs_save.hash')
+      span.innerHTML = ''; // <a href=http://127.0.0.1:8080/ipfs/'+hash+'>'+hash+'</a>';
+  console.debug(callee+'hash:',hash)
+  get_pin_status(hash);
+  get_like_status(hash);
+
+}
+async function get_like_status(hash) {
      let [callee, caller] = functionNameJS();
-     let textData = document.getElementById('pad_content').value;
-     let hash = await ipfsGetContentHash(textData);
-     let span = document.getElementById('ipfs_save.hash')
-         span.innerHTML = ''; // <a href=http://127.0.0.1:8080/ipfs/'+hash+'>'+hash+'</a>';
-     console.debug(callee+'hash:',hash)
 
      let liked = await getPinStatus(hash);
      console.debug(callee+'.liked:',liked)
@@ -92,27 +108,71 @@ async function getstatus(ev) {
            button.onclick = unlike; 
            console.debug(callee+'.button (liked):',button)
            console.dir(button)
+           button.innerHTML = liked.replace('recursive','liked')
          } else {
            button.onclick = event => { like(event) }; 
-           console.debug(callee+'.button (unlike):',button)
+           console.debug(callee+'.button (unliked):',button)
+           button.innerHTML = liked.replace('unpinned','like')
          }
-         button.innerHTML = liked.replace('recursive','liked')
-
-
+}
+async function get_pin_status(hash) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.hash:',hash);
+     let pinned = await getPinataStatus(hash);
+     let button = document.getElementById('pin')
+         if (pinned == 'pinned') {
+           button.onclick = unpin; 
+           console.debug(callee+'.button (pinned):',button)
+           console.dir(button)
+         } else {
+           button.onclick = event => { pin(event) }; 
+           console.debug(callee+'.button (unpinned):',button)
+         }
+         button.innerHTML = pinned
 }
 
- function pin(ev) {
+async function unpin(ev) {
+  console.error('TBD')
+}
+
+
+async function pin(ev) {
      let [callee, caller] = functionNameJS();
      console.debug(callee+'.input.ev:',ev);
 
-     let publicKey = 'pinata' 
-     let pinata_api_key = '478cecf4b06ce9e7eaeb';
-     let pinata_secret_xor_key = 'abc';
-     let pinata_secret_api_key = pinata_secret_xor_key ^ DH_secret(publicKey);
+     let pinata_api_key = KEYPAIR.key;
+     let pinata_secret_api_key = KEYPAIR.sec;
+
+
      let textData = document.getElementById('pad_content').value;
-     let qm = ipfsGetContentHash(textData);
-     let status = pinByHash(pinata_api_key,pinata_secret_api_key,qm)
-     console.log(callee+'status:',status)
+     let qm = await ipfsGetContentHash(textData);
+     console.debug(callee+'.qm:',qm)
+     let status = await pinByHash(pinata_api_key,pinata_secret_api_key,qm)
+     console.debug(callee+'.status:',status)
+     let query = 'ipfs_pin_hash='+status.ipfsHash
+     let jobs = await pinJobs(pinata_api_key,pinata_secret_api_key,query)
+     console.debug(callee+'.jobs:',jobs)
+
+     let button = ev.target
+         button.innerHTML = 'pinned' // gonflé !!!
+         button.onclick = event => { unlike(event) }; 
+ }
+
+
+
+async function get_api_keys(jsonfilename) {
+   let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.jsonfilename:',jsonfilename);
+   let url = './'+jsonfilename;
+   return fetch(url,{ mode: 'cors' })
+   .then( resp => {
+     console.debug(callee+'.resp.status',resp.status);
+     return resp.json()
+    })
+   .then( json => {
+     console.debug(callee+'.json',json);
+     return json })
+   .catch()
  }
 
  function DH_secret(pubkey) {
@@ -121,39 +181,110 @@ async function getstatus(ev) {
      console.error('TBD');
  }
 
+ async function pinJobs(pinataApiKey, pinataSecretApiKey, queryParams) {
+     let [callee, caller] = functionNameJS();
+     console.debug(callee+'.input.pinataApiKey:',pinataApiKey);
+     console.debug(callee+'.input.pinataSecretApiKey:',pinataSecretApiKey);
+     console.debug(callee+'.input.queryParams:',queryParams);
+     const url = 'https://api.pinata.cloud/pinning/pinJobs?'+queryParams;
+     let headers = {
+     'Content-Type': 'application/json',
+	 'pinata_api_key': pinataApiKey,
+	 'pinata_secret_api_key': pinataSecretApiKey
+     };
+     return fetch(url,{
+       method: 'GET',
+       headers: headers,
+     } )
+	 .then(function (response) {
+	     //handle response here
+         console.debug(callee+'.response:',response);
+         return response.json()
+	 })
+	 .catch(function (error) {
+	     //handle error here
+         console.error(callee+'.error:',error);
+	 });
+
+    
+ }
+
  async function pinByHash(pinataApiKey, pinataSecretApiKey, hashToPin) {
      let [callee, caller] = functionNameJS();
-     console.log(callee+'.input.pinataApiKey:',pinataApiKey);
-     console.log(callee+'.input.pinataSecretApiKey:',pinataSecretApiKey);
-     console.log(callee+'.input.hashToPin:',hashToPin);
+     console.debug(callee+'.input.pinataApiKey:',pinataApiKey);
+     console.debug(callee+'.input.pinataSecretApiKey:',pinataSecretApiKey);
+     console.debug(callee+'.input.hashToPin:',hashToPin);
+
+     let tics = getTic();
+    
+     console.debug(callee+'.tics:',tics);
+
      
-     const url = `https://api.pinata.cloud/pinning/pinByHash`;
+     const url = 'https://api.pinata.cloud/pinning/pinByHash';
      const body = {
 	 hashToPin: hashToPin,
 	 host_nodes: [
-	     '/ip6/2a02:120b:c3c7:7a40:34d6:1935:cdec:81fa/tcp/4001',
-	     '/ip6/2a02:120b:c3c7:7a40:953d:9b46:ba8:ea2f/tcp/4001'
+	     // '/ip6/2a02:120b:c3c7:7a40:34d6:1935:cdec:81fa/tcp/4001',
+	     // '/ip6/2a02:120b:c3c7:7a40:953d:9b46:ba8:ea2f/tcp/4001'
+         '/ip6/2a02:120b:c3c7:7a40:104c:59dc:924f:db7a/tcp/45409' 
 	 ],
 	 pinataMetadata: {
 	     name: 'pad_content',
 	     keyvalues: {
 		 origin: 'fairpad',
+         peerid: peerid,
+         tics: tics
 	     }
 	 }
      };
-     let headers= {
+     let headers = {
+     'Content-Type': 'application/json',
 	 'pinata_api_key': pinataApiKey,
 	 'pinata_secret_api_key': pinataSecretApiKey
-     }
+     };
 
-     return fetch(url,{ headers: headers, method: 'POST'} )
+     return fetch(url,{
+       method: 'POST',
+       headers: headers,
+       body: JSON.stringify(body)
+     } )
 	 .then(function (response) {
 	     //handle response here
+         console.debug(callee+'.response:',response);
+         return response.json()
 	 })
 	 .catch(function (error) {
 	     //handle error here
+         console.error(callee+'.error:',error);
 	 });
  }
+
+
+
+
+async function getPinataStatus(hash) {
+   let [callee, caller] = functionNameJS();
+   console.debug(callee+'.input.hash:',hash);
+   let pinataApiKey = KEYPAIR.key;
+   let pinataSecretApiKey = KEYPAIR.sec;
+   let url = 'https://api.pinata.cloud/data/pinList?hashContains='+hash;
+   let headers = {
+      'Content-Type': 'application/json',
+      'pinata_api_key': pinataApiKey,
+      'pinata_secret_api_key': pinataSecretApiKey
+   };
+   let status = await fetch(url, { headers: headers})
+   .then( resp => { 
+      console.debug(callee+'.resp:',resp);
+      return resp.json()
+    })
+   .then( json => {
+      console.debug(callee+'.json:',json);
+      return json
+   })
+   .catch(console.error)
+
+}
 
 async function local_load(ev) {
    let [callee, caller] = functionNameJS();
