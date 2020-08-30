@@ -1,0 +1,47 @@
+
+2 type of participants :
+  - reviewers
+  - editors
+
+
+reviewers sort texts w/i a category near real-time 
+editors edit own version with "winner" of same category side by side
+
+each text has a category and a the list/number of reviewers
+
+end of review is when a text is review by every-body
+
+every-body is the set of registered people who show interest in the category for "general-interest"
+
+general-interest is defined by sorting category according to fundamental needs of the members of a population (social contract).
+
+submission of text must be linked to a "doleance" (breach of social contract) attached to category (bug/issues)
+
+
+ex: no homeless -> category housing -> assertion : everyone has a decent home (according to existing decency norms)  
+
+/!\ assertion need to be checked for coherency at submission
+
+ambiguity : all names have their definitions
+(from a global DAG dictionary)
+(needs cycle detection for dictionaries)
+
+dictionary are "immutable" for a text, and there we can only refer
+to the "head" dictionary for a new text, so if definition doesn't exist
+the dictionary need to be updated.
+
+as a consequence if a new definition is produced, all texts associated with this text need to support the new definition otherwise the become obsolete/incoherent/invalid texts ("git type of conflict").
+
+doleance -> preamble -> law -> [decret][2] ...
+
+-> define decent
+-> define home
+-> define everyone
+
+-> home -> define roof ! ...
+
+[2]: http://global-fair-dictionary.fr/decret#definition2
+ 
+
+
+

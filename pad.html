@@ -20,14 +20,27 @@
     <body>
 
 	<h3>This is our fairPad</h3>
-	load locally from: <input id=local_load.file name=filename type=file>
+	load locally from: <input id=local_load.file name=filename type=file><!-- TBD: change to "Load File w/ a onchange" -->
 	<button class=local_load onclick=local_load(event)>local load</button>
 	<button id=like onclick=like(event)>like</button>
 	<button id=pin onclick=pin(event)>pin</button>
-	<button id=share onclick=share(event)>share</button>
+	<button id=import>import</button>
 	<button id=sync onclick=sync(event)>sync</button>
+	<select id=select name=winner>
+     <option>text node-1</option>
+     <option>text node-2 *</option>
+     <option>text node-3</option>
+     </select>
+	<button id=vote>vote (better than 2)</button>
+	<button id=print>print</button>
+	<textarea id=prefered_content disabled>ce texte est mon preferé</textarea>
+	<textarea id=winner_content disabled>ce texte est gagnant</textarea>
 <br>
 	<textarea id=pad_content onchange="get_status(event)">
+---
+node: node-3
+author: michelc
+---
 ceci est un texte
 
 
@@ -36,6 +49,9 @@ ceci est un texte
 <br>
 	save locally to: <input id=local_save.file_path name=localpath type=text value="pad_content.txt" placeholder="file-location-to-be-saved-to">
 	<button id=save onclick=local_save(event)>local save</button>
+<br>
+	publish to: <input id=publish.file_path name=location type=text value="/my/pads/./mypad.md" placeholder="globally-recognized-location-to-publish-to"> <button id=publish onclick=publish(event)>publish</button>
+    (<span id=publish.urn></span>)
 <br>
     load from ipfs: <input id=ipfs_load.hash name=ipfshash type=text value="QmfStezxKk8KXj85mBWCfRNrYZRFeWYKB3yi9CDKjuJ95c" placeholder="ipfs-hash-to-be-loaded-from">
 	<button id=load onclick=ipfs_load(event)>ipfs load</button>
@@ -63,7 +79,29 @@ var KEYPAIR;
 get_api_keys('data.json').then(
  keys => { KEYPAIR = keys })
 
+( async _ => {
+ var peerid = await Promise.resolve(promisedPeerId);
+ let localnid = getNid('urn:ipns:'+peerid);
+ console.log('main.localnid:',localnid);
+})();
 
+
+
+// compute hash, and publish history as well as indexes
+async function publish(ev) {
+  let [callee, caller] = functionNameJS();
+  let hash = await ipfs_save();
+  let file_path = document.getElementById('publish.file_path').value
+  let tics = getTic();
+  let hrecord = hash+': ["'+ file_path +'",'+ tics +']'
+  let hhash = await ipfsLogAppend(core['history'],hrecord)
+  console.debug(callee+'.hhash:',hhash);
+  document.getElementById('publish.urn').innerHTML = 'urn:'+nid+':'+file_path
+  return hhash
+
+
+    
+}
 async function like(ev) {
      let [callee, caller] = functionNameJS();
      console.debug(callee+'.input.ev:',ev);
