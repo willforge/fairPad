@@ -32,7 +32,7 @@ the dictionary need to be updated.
 
 as a consequence if a new definition is produced, all texts associated with this text need to support the new definition otherwise the become obsolete/incoherent/invalid texts ("git type of conflict").
 
-doleance -> preamble -> law -> [decret][2] ...
+doleance -> preamble -> law -> [decree][2][3] ...
 
 -> define decent
 -> define home
@@ -40,7 +40,8 @@ doleance -> preamble -> law -> [decret][2] ...
 
 -> home -> define roof ! ...
 
-[2]: http://global-fair-dictionary.fr/decret#definition2
+[2]: https://glosbe.com/fr/en/décret
+[3]: http://global-fair-dictionary.fr/decret#definition2
  
 
 
