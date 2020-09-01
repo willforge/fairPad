@@ -20,8 +20,6 @@
     <body>
 
 	<h3>This is our fairPad</h3>
-	load locally from: <input id=local_load.file name=filename type=file><!-- TBD: change to "Load File w/ a onchange" -->
-	<button class=local_load onclick=local_load(event)>local load</button>
 	<button id=like onclick=like(event)>like</button>
 	<button id=pin onclick=pin(event)>pin</button>
 	<button id=import>import</button>
@@ -33,8 +31,12 @@
      </select>
 	<button id=vote>vote (better than 2)</button>
 	<button id=print>print</button>
+<br>
 	<textarea id=prefered_content disabled>ce texte est mon preferé</textarea>
 	<textarea id=winner_content disabled>ce texte est gagnant</textarea>
+<br>
+	load locally from: <input id=local_load.file name=filename type=file><!-- TBD: change to "Load File w/ a onchange" -->
+	<button class=local_load onclick=local_load(event)>local load</button>
 <br>
 	<textarea id=pad_content onchange="get_status(event)">
 ---
@@ -75,11 +77,13 @@ const publicKey = 'pinata'
 const pinata_secret_xor_key = 'abc';
 const pinata_secret_api_key = pinata_secret_xor_key ^ DH_secret(publicKey);
 */
+var KEYPAIR;
 get_api_keys('secured/data.json').then(
- keys => { const KEYPAIR = keys });
+ keys => { KEYPAIR = keys });
 
+var peerid;
 ( async _ => {
- var peerid = await Promise.resolve(promisedPeerId);
+ peerid = await Promise.resolve(promisedPeerId);
  let localnid = getNid('urn:ipns:'+peerid);
  console.log('main.localnid:',localnid);
 })();
