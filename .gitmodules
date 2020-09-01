@@ -1,3 +1,6 @@
 [submodule "js"]
 	path = js
 	url = git@github.com:willforge/fairjs.git
+[submodule "secured"]
+	path = secured
+	url = keybase://private/michelc/secured
