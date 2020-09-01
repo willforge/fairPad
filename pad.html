@@ -75,9 +75,8 @@ const publicKey = 'pinata'
 const pinata_secret_xor_key = 'abc';
 const pinata_secret_api_key = pinata_secret_xor_key ^ DH_secret(publicKey);
 */
-var KEYPAIR;
-get_api_keys('data.json').then(
- keys => { KEYPAIR = keys })
+get_api_keys('secured/data.json').then(
+ keys => { const KEYPAIR = keys });
 
 ( async _ => {
  var peerid = await Promise.resolve(promisedPeerId);
@@ -200,7 +199,7 @@ async function pin(ev) {
 
 
 
-async function get_api_keys(jsonfilename) {
+function get_api_keys(jsonfilename) {
    let [callee, caller] = functionNameJS();
      console.debug(callee+'.input.jsonfilename:',jsonfilename);
    let url = './'+jsonfilename;
@@ -211,8 +210,8 @@ async function get_api_keys(jsonfilename) {
     })
    .then( json => {
      console.debug(callee+'.json',json);
-     return json })
-   .catch()
+     return Promise.resolve(json) })
+   .catch(console.log)
  }
 
  function DH_secret(pubkey) {
