@@ -9,6 +9,8 @@ keybase account email send-verification-email $email
 
 keybase git create secured
 
+git clone  --branch dbug --single-branch --recursive keybase://team/distributedbrain/fairPad
+
 2. allow keybase protocol
 git config --add protocol.keybase.allow user
 # or export GIT_ALLOW_PROTOCOL="keybase;file;git;ssh;http;submodule"
@@ -16,6 +18,7 @@ git config --add protocol.keybase.allow user
 3. clone the keybase submodule 
 kbuser=$(keybase status | head -1 | sed -e 's/  */ /' | cut -d' ' -f 2)
 git submodule add keybase://private/$kbuser/secured secured
+git clone keybase://private/$kbuser/secured ../secured
 
 4. create your secure/data.json file and commit it to your private repo
 
