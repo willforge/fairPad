@@ -1,3 +1,9 @@
+1st submition of initial text need to occur on
+and established tree to allow aggretion.
+
+each node is of arity 23 (max) with tree a depth of 6 (max) 23^6 = 148M
+
+
 
 2 type of participants :
   - reviewers

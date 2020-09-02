@@ -20,19 +20,24 @@
     <body>
 
 	<h3>This is our fairPad</h3>
-	<button id=like onclick=like(event)>like</button>
-	<button id=pin onclick=pin(event)>pin</button>
-	<button id=import>import</button>
-	<button id=sync onclick=sync(event)>sync</button>
-	<select id=select name=winner>
+    <div id=prefer>
+	<button id=pull>pull</button><!-- pre-load list of texts -->
+	<select id=select name=prefered>
      <option>text node-1</option>
      <option>text node-2 *</option>
      <option>text node-3</option>
      </select>
-	<button id=vote>vote (better than 2)</button>
+	<button id=like title="like selected" onclick=like(event)>like</button>
 	<button id=print>print</button>
 <br>
 	<textarea id=prefered_content disabled>ce texte est mon preferé</textarea>
+    </div>
+
+    <div>
+	<button id=update>update winner</button><!-- refresh winner -->
+	<button id=vote>vote (better than 2)</button>
+	<button id=pin onclick=pin(event)>pin</button>
+<br>
 	<textarea id=winner_content disabled>ce texte est gagnant</textarea>
 <br>
 	load locally from: <input id=local_load.file name=filename type=file><!-- TBD: change to "Load File w/ a onchange" -->
@@ -48,6 +53,7 @@ ceci est un texte
 
 
 	</textarea>
+    </div>
 <br>
 	save locally to: <input id=local_save.file_path name=localpath type=text value="pad_content.txt" placeholder="file-location-to-be-saved-to">
 	<button id=save onclick=local_save(event)>local save</button>
@@ -81,11 +87,13 @@ var KEYPAIR;
 get_api_keys('secured/data.json').then(
  keys => { KEYPAIR = keys });
 
+var nid;
 var peerid;
 ( async _ => {
  peerid = await Promise.resolve(promisedPeerId);
  let localnid = getNid('urn:ipns:'+peerid);
  console.log('main.localnid:',localnid);
+ nid = localnid;
 })();
 
 
