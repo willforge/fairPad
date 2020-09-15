@@ -1,8 +1,71 @@
+
+citizen who wants to submit a doleance need to be registered to a roud-about team
+ via "/keybase/fairPad/round-about.html"
+
+all registration get "written" in an anonymous inbox (public key) where the private key is known by EVERYONE.
+
+- private key : [QmcgiQvkmWs3KWwVpwktu3i2zGADfvPw8P3rMHR1wAhNDg][1]
+- public key: [QmQEE6A4CCxLLjMd49paDaW4W9Vv8MFRY3uDSM6XgVYCgm][2]
+
+each member can process, verify and aggregate the registration requests.
+(all private data need to be "tokenized" before publication on the network
+   token=khash(salt,peerid)
+   
+   token=khash(DH(pubsalt),peerid) ..  (DH: Diffie–Hellman) 
+
+[1]: https://gateway.pinata.cloud/ipfs/QmcgiQvkmWs3KWwVpwktu3i2zGADfvPw8P3rMHR1wAhNDg
+[2]: https://gateway.ipfs.io/ipns/QmQEE6A4CCxLLjMd49paDaW4W9Vv8MFRY3uDSM6XgVYCgm
+  
+```
+... 1) request token (required a server??)
+    2) allocated slot is return (sole writer on the slot) 
+    3) write in slot ...
+
+alternative
+  1) draw uniqu slot address
+  2) publish address on anonymous inbox
+
+```
+
+
+
+
+
 1st submition of initial text need to occur on
 and established tree to allow aggretion.
 
+
+
 each node is of arity 23 (max) with tree a depth of 6 (max) 23^6 = 148M
 
+every members are organized into groups which are included in bigger groups
+such that the text aggregation is made geographically.
+
+Ex:
+
+1. doleance category,
+2. rond-point (team),
+3. district (arrondisssment),
+4. city,
+5. county (departement),
+6. region (state),
+7. country
+
+The leaves (user nodes) are submitting texts and create a PR to their respective groups
+
+the hashes of doleances are including in a global Merkle DAG (6 level)
+by PR requests for registrating the hash at the level just above.
+
+i.e. when a member of a group make a sync the local node is process all pending
+pull request from that particular node and create a PR for wider node this member
+belongs too.
+
+### attribution of categories
+
+each text is submitted with an initial category which is revise along the agration
+by all the reviewer the category the most commonly chosen is the one asigned to
+the text. every node has the option to update the metadata (like, rank, category,
+defined flag, keywords, tags, label, discussion (as StackOverflow), docs,refs(?) )
 
 
 2 type of participants :

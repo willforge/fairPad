@@ -11,7 +11,7 @@
 ```sh
 cat > team.yml <<EOF
 --- name of team
-QmcfHufAK9ErQ9ZKJF7YX68KntYYBJngkGDoVKcZEJyRve: michel
+QmcfHufAK9ErQ9ZKJF7YX68KntYYBJngkGDoVKcZEJyRve: michel (ipfs node control by physical person)
 QmTjhk5YJqxMKqSqi8PZXEBm9wryGAfS54uPZGUXdLZ4HK: alain
 QmZYVoscbWWJJZWy7Ue19iGXC5SRh3kune3gKSYHv3kzKn: emile
 EOF
