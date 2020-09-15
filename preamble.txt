@@ -18,7 +18,7 @@ each member can process, verify and aggregate the registration requests.
   
 ```
 ... 1) request token (required a server??)
-    2) allocated slot is return (sole writer on the slot) 
+    2) allocated slot in return (sole writer on the slot) 
     3) write in slot ...
 
 alternative
@@ -28,11 +28,12 @@ alternative
 ```
 
 
-
-
-
 1st submition of initial text need to occur on
-and established tree to allow aggretion.
+an established tree to allow aggretion.
+
+each aggretors have the mission to "reduce" the number of texts they recieve
+before they relay it to the next group (level above).
+
 
 
 

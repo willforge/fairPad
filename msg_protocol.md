@@ -7,7 +7,8 @@ every one can post a *message* to this inbox
 ## Initial Connection Dialog
 
 1. receiver post token (w/ TTL)
-2. sender get token & post
+2. sender get token & post peerid
+3. reciever get peerid
 
 
 ### Message Post Protocol (push)

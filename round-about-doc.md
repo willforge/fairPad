@@ -8,6 +8,20 @@
 6. country
 
 
+each rond-point has a lobby
+a person who wants to join the "rond-point" 
+need to have a keybase account to login and ask for aproval
+3 members are contacting the person "live"
+(phone,telelgram voice, what's app, jitsi, zoom, mumble)
+to assess the request
+and grant together the membership.
+
+once accepted he can see the keybase pseudo
+the 3 "parains" has the his public key
+
+
+list of pseudo is public...
+
 ```sh
 cat > team.yml <<EOF
 --- name of team
