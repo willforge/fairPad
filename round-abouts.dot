@@ -1,0 +1,43 @@
+#
+
+digraph rpoint {
+
+ rps -> discrits -> cities -> counties -> states -> countries -> root
+ 
+ emile    -> rpe  -> districte  -> city1
+ alain    -> rpa  -> districta  -> city2
+ michel   -> rpm  -> districtm  -> city3
+ roland   -> rpr  -> districtr  -> city4
+ imad     -> rpi  -> discricti  -> city4
+
+ member1  -> rp6  -> district1  -> city1
+ member2  -> rp7  -> district2  -> city1
+ member3  -> rp8  -> district3  -> city1
+
+ member4  -> rp9  -> district4  -> city3
+ member5  -> rp10 -> district5  -> city3
+ member6  -> rp11 -> district6  -> city4
+ member7  -> rp12 -> district7  -> city5
+ member8  -> rp13 -> district8  -> city5
+ member9  -> rp13 -> district9  -> city6
+ member10 -> rp14 -> district10 -> city6
+ member11 -> rp15 -> district11  -> city6
+
+ memberii -> rpjj -> districtkk -> cityll
+
+ {discrit1, discrit2} -> city1
+ {discrit3, discrit4, discrit5} -> city2
+
+ {city1,city2,city3} -> county1
+ {city4,city5}       -> county2
+ {city6,city7}       -> county3
+
+ {county1,county2} -> state1
+ {county3,county4,county5} -> state2
+
+ {state1,state2,state3} -> country1
+
+ {country1,country2,coutry3} -> root
+
+
+}
