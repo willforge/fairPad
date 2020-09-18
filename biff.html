@@ -33,7 +33,7 @@ and post it on IPFS.
 <p> The receiver can "pull" the 1-bit biff by checking it the IPFS file exists at the address : <a href="#" name='qm'>/ipfs/:qm</a>
 
 <p> if the content does exist then the biff bit is set to true !
-
+<br>
 biff bit = <span id=biff-bit>false</span>
 
 <p>EOT
@@ -48,7 +48,7 @@ async function main () {
  let today = getTic(); // get_date();
  peerid = await Promise.resolve(promisedPeerId);
 
- let message = `biff bit for ${inbox_name} is true on $today, this message is intended for peerid id ${peerid}`;
+ let message = `biff bit for ${inbox_name} is true on ${today}, this message is intended for peerid id ${peerid}`;
  let uniq_content = getNid(sharedsecret + message);
 
  let qm = await ipfsGetHashByContent(uniq_content); // without publication !
