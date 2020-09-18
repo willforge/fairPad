@@ -20,15 +20,17 @@
 <p> A sender wants to transmit one bit (called "biff-bit") by pressing the
 <button id=notify>notify</button> button.
 
-<p> Receiver creates a <a href="#" name=uniq>unique</a> content for his inbox trigger
+<p> Receiver creates a <a href="#" name=uniq>unique</a> content for his inbox trigger.
+<br>
 The existance of this content on IPFS is this "1-bit" biff
 to be transmitted by the sender.
+<br>
 The receiver prepares a "<a href="#" name=recipe>recipe</a> for anyone to create the content
 
-<p> The sender get the recipe and create the exact same content (content's hash: <span id=trig_hash>n/a</span)
+<p> The sender get the recipe and create the exact same content (content's hash: <span id=trig_hash>n/a</span>)
 and post it on IPFS.
 
-<p> The receiver can "pull" the 1-bit biff by checking it the IPFS file exists at the address : <a href="#">/ipfs/:qm</a>
+<p> The receiver can "pull" the 1-bit biff by checking it the IPFS file exists at the address : <a href="#" name='qm'>/ipfs/:qm</a>
 
 <p> if the content does exist then the biff bit is set to true !
 
@@ -38,17 +40,18 @@ biff bit = <span id=biff-bit>false</span>
 
 <script>
  const sharedsecret = '123-secret-de-polichinelle';
- let inbox_name = 'michelc'
+ let inbox_name = 'michelc';
  var peerid;
+ var gw_port = '8080';
 
-async main () {
+async function main () {
  let today = getTic(); // get_date();
  peerid = await Promise.resolve(promisedPeerId);
 
  let message = `biff bit for ${inbox_name} is true on $today, this message is intended for peerid id ${peerid}`;
  let uniq_content = getNid(sharedsecret + message);
 
- let qm = await ipfsGetHashByContent($uniq_content); // without publication !
+ let qm = await ipfsGetHashByContent(uniq_content); // without publication !
  document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm}`
  if (typeof(qm_tmpl) == 'undefined') {
   qm_tmpl = document.getElementsByName('qm')[0].innerHTML;
@@ -56,7 +59,7 @@ async main () {
  document.getElementsByName('qm')[0].innerHTML = qm_tmpl.replace(':qm',qm);
  document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm}`
 
- let sha1 = await ipfsGetSHA1ByContent($uniq_content)
+ let sha1 = await ipfsPostSHA1ByContent(uniq_content)
  document.getElementsByName('uniq')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${sha1}`
 }
 
