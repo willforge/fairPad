@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="js/sha256.js"></script>
+    <script src="js/js-yaml.js" type=text/javascript></script>
     <script src="js/essential.js"></script>
     <script src="js/ipfs.js"></script>
     <script src="js/functions.js"></script>
@@ -18,48 +19,34 @@
 
 
 <h3>Problem: </h3>
-<p> A sender wants to transmit one bit (called "biff-bit") to a friend's inbox
+<p> A <span id=sender title="">sender</span> wants to transmit one bit
+(called "biff-bit") to a <span id=friend>friend</span>'s inbox
 to notify him he has some new message (<i>"You've got mail"</i>)
 
-<br>
-friends: 
-<select name="category" id="cat">
-  <option label="group">
-    <option value="">Family</option>
-    <option value="">Friends</option>
-    <option value="">Work</option>
-    <option value="">Acquintance</option>
-    <option value="">Trusted</option>
-    <option value="">Alphabetic</option>
-  </option>
-</select>
-<select name="nickname" id="nick">
-  <option label="nickname">
-</select>
 
 <h4>Purpose:</h4>
-This is to architect a system based primary on "pull services", and minimise "push services"
-as push service are very sensitive to spam / corruption, whereas pull is locally controlled
-and is a good fit for P2P system.
+We want to primaraly base our system on "pull services",
+and minimize the use of "push services";
+push services are very sensitive to spam / and subject to corruption and attack
+whereas pull is locally controlled and is therefore a good fit for P2P system.
 
 <h3>Solution: </h3>
 
 <ol>
-<li> Recipient creates a <a href="#" name=uniq>unique</a> content to trigger an inbox notification.
+<li> Recipient creates a <a href="#" name=uniq>unique</a> content (<span id=uniq_content>***</span>) to trigger an inbox notification.
 <br>
 The existance of this content on IPFS will means the biff-bit is set (true) otherwise it is false.
 note: only false to true transition are possible ( one-way boolean event flag )
 <li>
-The recipient prepares a "<a href="#" name=recipe>recipe</a>" for anyone to create the same content,
+The recipient prepares a "<a href="#" name=recipelink>recipe</a>" for anyone to <i>re</i>create the same content,
+<br>Therefore, any sender can replicate and post the content to set the biff-bit
 <br><textarea name=recipetext disabled rows=5 cols=80>
 </textarea>
-<br>Therefore, any sender can replicate and post the content to set the biff-bit
 
 <li>
  The sender get the recipe and create the exact same content (content's hash: <span id=trigger_hash>n/a</span>)
 <li> Sender post it on IPFS
-by pressing the
-<button id=notify onclick="notify(event)">notify</button> button.
+by pressing the notify button in sender section.
 
 <li> The recipient can "pull" the 1-bit biff by checking it the IPFS file exists at the address : <a href="#" name='qm'>/ipfs/:qm</a>
 
@@ -72,69 +59,269 @@ by pressing the
 
 <li> Once recipient has read message he can optionally send an message acknowledge (ACK) back
 such that the sender can removed it from his outbox;
-no biff-bit acknowledge is necessary they have a time-to-live (TTL = 3 days)
+<br>no biff-bit acknowledge is necessary they have a time-to-live (TTL = 3 days)
 </ol>
 <!--
  Q: can we have a proof that biff-bit = false at a give time... ?
  Q: can we have a notify message solely creatable by sender ? (pre-build signature)
 -->
 
+
+<div id=sender style="float: left; width:49%">
+<h2>Sender</h2>
+<p> sender's peerid: <span class=peerid></span>
+<br>
+recipient: 
+<select name="group" id="groupsel" onchange="update_nicksel(event);">
+    <option label="select group"></option>
+    <option value="alphabetic">Alphabetic</option>
+    <option value="family">Family</option>
+    <option value="friends">Friends</option>
+    <option value="work">Work</option>
+    <option value="acquintance">Acquintance</option>
+    <option value="trusted">Trusted</option>
+    <option value="*bots">*bots</option>
+</select>
+<select name="nickname" id="nicksel" onchange="recreate_uniq_content(event);">
+    <option label="select name"></option>
+</select>
+<br>peerkey: <span id=peerkey></span>
+
+<br><button id=notify onclick="notify(event)">notify</button>
+</div>
+<div id=recipient style="float: left; width:49%">
+<h2>Recipient</h2>
+<p> recipient peerid: <span class=peerid></span>
+<p> recipient fullname: <input type=text name=fullname value="" placeholder="please enter your fullname">
+<br><button id=create onclick="create(event)">create</button> unique content 
+<br><input name=uniq_message value="" size=48 disabled>
+<br><button id=pull onclick="pull(event)">pull</button>
+</div>
+
+<br>
 <h3>Status</h3>
 <b><span>current biff-bit = <span id=biff-bit>false</span></b>
 
 
 <script>
  const sharedsecret = '123-secret-de-polichinelle;'; // to be fetched from keybase or end-to-end encrypted system
- const today = getTic(); // get_date();
- let inbox_name = 'michelc'; // reciever
- let inbox_peerkey = 'QmcfHufAK9ErQ9ZKJF7YX68KntYYBJngkGDoVKcZEJyRve'
+ const today = Math.floor(getTic() / 60); // get_date();
+ let inbox_nickname = 'anonymous';
+ let recipient_fullname = 'anonymous';
+ let recipient_peerkey = 'QmInconnu'
  var uniq_content;
  var sha1;
  var qm_trigger;
  var peerid; // sender
  var gw_port = '8080';
+ var friendsmap = {};
+ var groups = { 'all': []};
 
-async function main () {
- peerid = await Promise.resolve(promisedPeerId);
-
- // create content
- let message = `biff-bit for ${inbox_name} is true on ${today}, this message is intended for peerid ${inbox_peerkey}`;
- uniq_content = getNid(sharedsecret + message);
-
- // create trigger hash
- qm_trigger = await ipfsGetHashByContent(uniq_content); // without publication !
- document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm_trigger}`
- if (typeof(qm_tmpl) == 'undefined') {
-  qm_tmpl = document.getElementsByName('qm')[0].innerHTML;
+ function compare(a,b) {
+    let order = 0;
+    if (a > b) {
+       order = 1;
+    } else if (a < b) {
+       order = -1; 
+    }
+    return order;
  }
- document.getElementsByName('qm')[0].innerHTML = qm_tmpl.replace(':qm',qm_trigger);
- document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm_trigger}`
 
- // build recipe
- sha1 = await ipfsPostSHA1ByContent(uniq_content)
- document.getElementsByName('uniq')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${sha1}`
- document.getElementsByName('uniq')[0].title = message
- let recipe = `to notify ${inbox_name} run the following command\n` +
-              `ipfs cat ${sha1} | ipfs add -\n`
- document.getElementsByName('recipetext')[0].innerHTML = recipe
 
- // publish recipe
- let recipe_hash = await ipfsPostHashByContent(recipe);
- let tics = getTic();
- let file_path = '/public/notification-recipe.txt'
- let hrecord = recipe_hash+': ["'+ file_path +'",'+ tics +']'
- let hhash = await ipfsLogAppend(core['history'],hrecord)
+main();
+async function main () {
+    peerid = await Promise.resolve(promisedPeerId);
+    document.getElementById('sender').title = peerid;
+    for (e of document.getElementsByClassName('peerid')) {
+      e.innerHTML = peerid;
+    }
 
- // sender get recipe ...
- // ...
 
- // pull status 
- let biff = await getBiffStatus(qm_trigger);
+    // load friends table (WoT)
+    friendsmap = await getMFSFileContent('/my/friends/peerids.yml').
+       then( yml => { 
+             let friends;
+             if (typeof(yml.Code) == 'undefined') {
+               friends = window.jsyaml.safeLoad(yml);
+             } else {
+               friends = {};
+             }
+             console.log('friends:',friends)
+             return friends
+             }).
+    catch(console.error);
+    for (let i in Object.keys(friendsmap)) {
+       let key = Object.keys(friendsmap)[i];
+       let friend = friendsmap[key];
+       console.log('nick.',friend.nickname);
+          console.log('group:',friend.group)
+          if (typeof(groups[friend.group]) == 'undefined') {
+             groups[friend.group] = [];
+          } 
+          groups[friend.group].push(key);
+          groups['all'].push(key);
+    }
+    console.log('groups:',groups)
+    // remove all group options but the label
+    var select_obj = document.getElementById("groupsel");
+    for ( let i=select_obj.length-1; i > 0; i-- ) {
+      select_obj.remove(i);
+    }
+    let idxall = 0;
+    console.log('select:',select_obj)
+    console.log('sorted keys:',Object.keys(groups).sort())
+    // add new groups
+    for (let key of Object.keys(groups).sort()) {
+       let group = groups[key];
+       var option = document.createElement("option");
+       option.value = key;
+       option.text = key;
+      console.log('adding.option:',option)
+       select_obj.add(option)
+      if (key == 'all') { idxall = option.index }
+   }
+   select_obj.options[idxall].selected = true;
+   update_nicksel('first run');
+
 
 }
 
-main();
+function create(ev) {
+  create_uniq_content(peerid);
+}
+function getNameByPeerkey(id) {
+  let nid = getNid('uri:ipns:'+id);
+  let fullname = friendsmap[nid].fullname;
+  return fullname
+}
+async function create_uniq_content(peerkey) {
+   let my_fullname = document.getElementsByName('fullname')[0].value;
+   recipient_peerkey = peerkey;
+   // create content
+   let uniq_message = `biff-bit for ${my_fullname} is true on ${today}, this message is intended for peerid ${recipient_peerkey}`;
+   uniq_content = getNid(sharedsecret + uniq_message);
+   document.getElementById('uniq_content').innerHTML = uniq_content;
+   document.getElementsByName('uniq_message')[0].value = uniq_message;
+   // create trigger hash
+   qm_trigger = await ipfsGetHashByContent(uniq_content); // without publication !
+   document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm_trigger}`
+      if (typeof(qm_tmpl) == 'undefined') {
+         qm_tmpl = document.getElementsByName('qm')[0].innerHTML;
+      }
+   document.getElementsByName('qm')[0].innerHTML = qm_tmpl.replace(':qm',qm_trigger);
+   document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm_trigger}`
+      // build recipe
+      sha1 = await ipfsPostSHA1ByContent(uniq_content)
+      document.getElementsByName('uniq')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${sha1}`
+      document.getElementsByName('uniq')[0].title = uniq_message
+      let recipe = `to notify ${my_fullname} run the following command\n` +
+      `ipfs cat ${sha1} | ipfs add -\n`
 
+      // publish recipe
+      let recipe_hash = await ipfsPostHashByContent(recipe);
+   let tics = getTic();
+   let file_path = '/public/notification-recipe.txt'
+      document.getElementsByName('recipelink')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${recipe_hash}`;
+   let hrecord = recipe_hash+': ["'+ file_path +'",'+ tics +']'
+      let hhash = await ipfsLogAppend('/my/biff/recipes.log',hrecord)
+      document.getElementsByName('recipetext')[0].innerHTML = recipe
+
+
+
+}
+
+async function recreate_uniq_content(ev) {
+    let [callee, caller] = functionNameJS();
+    // get key of selected recipient 
+    var select_nick = document.getElementById("nicksel");
+    nid = select_nick.options[select_nick.selectedIndex].value
+    console.log(callee+'.nid:',nid)
+    inbox_nickname = friendsmap[nid].nickname
+    recipient_peerkey = friendsmap[nid].peerkey
+    recipient_fullname = friendsmap[nid].fullname
+
+    console.log(callee+'.recipient.peerkey:',recipient_peerkey)
+    document.getElementById('peerkey').innerHTML = recipient_peerkey;
+    // create content
+    let message = `biff-bit for ${recipient_fullname} is true on ${today}, this message is intended for peerid ${recipient_peerkey}`;
+    uniq_content = getNid(sharedsecret + message);
+    document.getElementById('uniq_content').innerHTML = uniq_content;
+
+
+    // create trigger hash
+    qm_trigger = await ipfsGetHashByContent(uniq_content); // without publication !
+    document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm_trigger}`
+       if (typeof(qm_tmpl) == 'undefined') {
+          qm_tmpl = document.getElementsByName('qm')[0].innerHTML;
+       }
+    document.getElementsByName('qm')[0].innerHTML = qm_tmpl.replace(':qm',qm_trigger);
+    document.getElementsByName('qm')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${qm_trigger}`
+
+       // build recipe
+       sha1 = await ipfsPostSHA1ByContent(uniq_content)
+       document.getElementsByName('uniq')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${sha1}`
+       document.getElementsByName('uniq')[0].title = message
+       let recipe = `to notify ${inbox_nickname} (${recipient_fullname}) run the following command\n` +
+       `ipfs cat ${sha1} | ipfs add -\n`
+      let recipe_hash = await ipfsGetHashByContent(recipe);
+      document.getElementsByName('recipelink')[0].href = `http://127.0.0.1:${gw_port}/ipfs/${recipe_hash}`;
+      document.getElementsByName('recipetext')[0].innerHTML = recipe
+
+       // pull status 
+       let biff = await getBiffStatus(qm_trigger);
+       if (biff == true) {
+        console.log(`${inbox_nickname} got mail ! (${recipient_peerkey})`);
+       }
+
+}
+
+async function pull(ev) {
+  let biff = await getBiffStatus(qm_trigger);
+  if (biff == true) {
+    alert(`You got mail ! (${peerid})`);
+  }
+}
+
+async function _ (ev) {
+       // sender get recipe ...
+       // ...
+
+
+ }
+
+
+function by_name(a,b) { 
+   let order = compare(friendsmap[a].nickname,friendsmap[b].nickname);
+   if (order == 0) { order = compare(a,b); }
+   return order;
+}
+
+function update_nicksel(ev) {
+    let [callee, caller] = functionNameJS();
+    // remove all names
+    let select_nick = document.getElementById("nicksel");
+    for ( let i=select_nick.length-1; i >= 0; i-- ) {
+      select_nick.remove(i);
+    }
+    // get selected group
+    let select_grp = document.getElementById("groupsel");
+    let group_idx = select_grp.options[select_grp.selectedIndex].value
+    let members = groups[group_idx];
+    
+   // add all names
+   let option = document.createElement("option");
+      option.label = 'select a name'
+      select_nick.add(option)
+   for (let key of members.sort(by_name)) {
+      console.log(callee+'.key:',key,friendsmap[key].nickname)
+      let option = document.createElement("option");
+      option.value = key
+      option.text = friendsmap[key].nickname
+      select_nick.add(option)
+      console.log(callee+'.option:',option);
+   }
+
+}
 async function notify(ev) {
   // TODO: get recipe extract sha1 (could be replaced by a js function to compute the sha1)...
   let content = await ipfsGetContentByHash(sha1);
@@ -149,10 +336,12 @@ async function getBiffStatus(qm) {
   let content = await ipfsGetContentByHash(qm)
   .then( buf => {
         document.getElementById('content').innerHTML = buf;
-        document.getElementById('biff-bit').innerHTML = 'true' 
         document.getElementById('log').style.display = ''; // '' to display it w/o 'blocking' i.e. it removes the display attribute !
         document.getElementById('pin').style.display = ''; // to display it !
-        status = true;
+        if (buf == uniq_content) {
+          status = true;
+          document.getElementById('biff-bit').innerHTML = 'true' 
+        }
         return buf;
         })
   .catch( _ => { console.log('no new message'); return undefined; });
@@ -172,12 +361,13 @@ async function pin(ev) {
 async function log(ev) {
  let [callee, caller] = functionNameJS();
  let biff_record = `${today}: ${uniq_content} ${qm_trigger}`
- let log_hash = await ipfsLogAppend('/my/biff.log',biff_record)
+ let biff_logfile = '/my/biff/notification.log'
+ let log_hash = await ipfsLogAppend(biff_logfile,biff_record)
  document.getElementById('log').innerHTML = 'logged';
  document.getElementById('log').style.display = ''; // to display it w/o 'blocking'
 
  document.getElementById('loglink').href = `http://127.0.0.1:${gw_port}/ipfs/${log_hash}`
- document.getElementById('loglink').innerHTML = '/my/biff.log';
+ document.getElementById('loglink').innerHTML = biff_logfile
  document.getElementById('logfile').style.display = '';
 
 }
