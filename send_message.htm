@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<head>
+    <script src="js/sha256.js"></script>
+    <script src="js/js-yaml.js" type=text/javascript></script>
+    <script src="js/essential.js"></script>
+    <script src="js/ipfs.js"></script>
+    <script src="js/functions.js"></script>
+</head>
+
+<div>
+<p><span id=sender>Sender</span>'s peerid: <span class=peerid>MyPeerID</span>
+<br>
+recipient: 
+<select name="group" id="groupsel" onchange="update_nicksel(event);">
+    <option label="select group"></option>
+    <option value="fakegroup">Fake Group</option>
+</select>
+<select name="nickname" id="nicksel" onchange="create_envelop(event);">
+    <option label="select name"></option>
+    <option value="fakename">Fake Name</option>
+</select>
+<br>peerkey: <span id=peerkey></span>
+
+<br><input id="subject" value="" placeholder="Subject">
+<br><textarea id="message" rows=5 cols=76>
+</textarea>
+<br><button id=send onclick="send(event)">send</button>
+
+</div>
+
+
+<script>
+  initialize();
+  let state = get_state();
+   
+async function send(ev) {
+  let [callee, caller] = functionNameJS();
+  let tics = getTic();
+  let outbox = await get_mbox();
+  if (typeof(outbox) == 'undefined') {
+    outbox = {};
+  } else {
+  console.debug(callee+'.outbox:',outbox);
+  }
+  envelop.message = document.getElementById('message').value;
+  envelop.subject = document.getElementById('subject').value;
+  console.log(callee+'.envelop:',envelop);
+  let qm = await ipfsPostHashByObject(envelop);
+  console.debug(callee+'.qm:',qm);
+  outbox[tics]= qm // max one message per tics ...
+  console.debug(callee+'.outbox:',outbox);
+  let hash = await write_mbox(outbox);
+  let ppath = await publish_mbox();
+  console.debug(callee+'.ppath:',ppath);
+}
+
+</script>
