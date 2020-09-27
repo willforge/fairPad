@@ -9,7 +9,7 @@
 </head>
 
 <div>
-<p><span id=sender>Sender</span>'s peerid: <span class=peerid>MyPeerID</span>
+<p><span id=node>Sender</span>'s peerid: <span class=peerid>MyPeerID</span>
 <br>
 recipient: 
 <select name="group" id="groupsel" onchange="update_nicksel(event);">
@@ -33,7 +33,8 @@ recipient:
 
 <script>
   initialize();
-  let state = get_state();
+  buildGroupSelect(groupsmap,'groupsel');
+  buildNameSelect('groupsel','nicksel');
    
 async function send(ev) {
   let [callee, caller] = functionNameJS();
