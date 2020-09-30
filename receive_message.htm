@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<head>
+    <script src="js/sha256.js"></script>
+    <script src="js/js-yaml.js" type=text/javascript></script>
+    <script src="js/essential.js"></script>
+    <script src="js/ipfs.js"></script>
+    <script src="js/functions.js"></script>
+</head>
+
+<div>
+<p><span id=node>Recipient</span>'s peerid: <span class=peerid>MyPeerID</span>
+<br><input name=fullname value="Michel Combes" placeholder="your fullname">
+<br><button onclick="get_biff_status(event)">check inbox</button>
+<br><span id=token></span>
+<br>status: <span id=biff>biff=false</span>
+
+<br><button onclick="get_mail(event)">get mail</button>
+<div id=inbox>
+<table id=mbox>
+<tr><th>date</th><th>message</th><th>status</th>
+<tr><td id=template class=msg_date>:date</td><td><a name=msg_link href="http://localhost:8080/ipfs/:qm">/ipfs/:qm</a></td><td class=msg_status>:status</td>
+</table>
+</div>
+
+
+<script>
+  var peerid;
+  var biff = false
+  initialize();
+
+async function get_biff_status(ev){
+    let [callee, caller] = functionNameJS(); // logInfo("message !")
+  let fullname = document.getElementsByName('fullname')[0].value; 
+  // let fullname = ev.target.value
+  console.debug(callee+'.fullname:',fullname);
+  let biff = await get_notification_status(fullname,peerid);
+  document.getElementById('biff').innerHTML = 'biff='+biff;
+  if (biff == true) {
+    alert("You've got Mail !");
+    // get_mail();
+  } else {
+    console.log("You have no Mail");
+  }
+}
+
+async function get_mail(ev) {
+let [callee, caller] = functionNameJS(); // logInfo("message !")
+
+for (let i in Object.keys(friendsmap)) {
+    let key = Object.keys(friendsmap)[i];
+    let friend = friendsmap[key];
+    console.log(callee+'.friend.nickname:',friend.nickname);
+    if (friend.nickname != 'francoisc') { continue; }
+    console.debug(callee+'.friend',friend);
+    let peerkey = friend.peerkey;
+    let mboxid = getNid('urn:message:to:'+peerid+':from:'+peerkey);
+    let mbox_path = '/my/outbox/'+mboxid+'.json'
+    let ipfs_path = await getMutableHead(peerkey,mbox_path)
+    console.debug(callee+'.ipfs_path',ipfs_path);
+    let mbox = await ipfsGetContentByPath(ipfs_path);
+    console.debug(callee+'.mbox:',mbox);
+    display_mbox(mbox);
+    
+}
+
+}
+
+async function display_mbox(mbox) {
+let [callee, caller] = functionNameJS(); // logInfo("message !")
+  let table=document.getElementById('mbox');
+  // clear table all but last row...
+  let pos = 1;
+  clear_table(table,-1);
+  let last = table.rows.length-1;
+  let lastrow = table.rows[last];
+  console.debug(callee+'.keys(mbox):',Object.keys(mbox))
+  for(let i in Object.keys(mbox)) {
+    console.debug(callee+'.i:',i)
+    let newrow = table.insertRow(pos); // insert always in pos to have reverse order...
+    let template = lastrow.innerHTML; // copy previous row content
+    newrow.innerHTML = fill_row(template,i,mbox);
+    console.debug(callee+'.newrow:',newrow)
+  }
+}
+
+function fill_row(template,i,mbox) {
+let [callee, caller] = functionNameJS(); // logInfo("message !")
+    let keys = Object.keys(mbox)
+    console.debug(callee+'.keys:',keys);
+    let timestamp = keys[i];
+    console.debug(callee+'.timestamp:',timestamp);
+
+    let qm = mbox[timestamp];
+    console.debug(callee+'['+i+'].mbox['+timestamp+']:',qm)
+    let buf =  template.replace(':date',timestamp);
+        buf =  buf.replace(/:qm/g,qm);
+        buf =  buf.replace(/:status/,'unread');
+    console.debug(callee+'.buf:',buf)
+   return buf
+}
+
+function clear_table(t,pos) {
+   console.log('t:',t)
+   let p = t.rows.length+pos;
+   t.rows[p-1].style.display=''; 
+   //t.rows[p-1].style.display='none'; 
+   for (i = p-1; i > 0; i--) {
+      t.deleteRow(i)
+   }
+   console.log('nrow after delete:',t.rows.length)
+}
+
+</script>

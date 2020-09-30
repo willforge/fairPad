@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<!--
+mumble://mumble.framatalk.org/France/fairTeam?title=fairTeam&version=1.2.0 
+-->
+
+anonymous key: <span id=key>...</span> (ipns)
+<br>
+message: <input name=hash size=45 type=text value="" placeholder="hash to submit">
+<button id=submit onclick="submit(event)">post</button>
+<br>recorded at <span id=record_hash></span> (ipfs)
+
+<h2>Line Trig</h2>
+
+
+<h2>Inbox Slots</h2>
+<div id=queue>
+</div>
+
+<h2>Message Queue (payload)</h2>
+<div id=payload>
+</div>
+
+<!-- <script src=js/base58.js></script>
+-->
+<script src=js/essential.js></script>
+<script src=js/base32.js></script>
+<script src=js/ipfs.js></script>
+<script>
+ var gw_port = '8080';
+ var IRQ_list = [];
+ var anon_peerkey = 'QmAnon';
+
+const ALPHA58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz" // bitcoin all but Il0O
+//               0123456789012345678901234567890123
+const ALPHA32 = "123456789abcdefghjkmnpqrstuvwxyz"
+const ALPHA_RFC4648 = "abcdefghijklmnopqrstuvwxyz234567"
+
+console.log('s:',base32.decode('nvuwg2dfnq'))
+
+
+/*
+ Wed Sep  9 16:13:21 CEST 2020
+ 1) get list of keys (/ipns/QmWEKSXsHjn2uYMcwNu9Y3QXPtFe3h3wju9e2itgEN6yvZ)
+ 2) store private key on keybase for ipfs to directly use (via softlink to keystore)
+ 3) write hash to allocated namespace.
+*/
+
+var peerid;
+//console.log('base58:',base58)
+
+async function main(_) {
+ let [callee, caller] = functionNameJS();
+ peerid = await Promise.resolve(promisedPeerId);
+ let anon_keys_path = '/ipns/QmWEKSXsHjn2uYMcwNu9Y3QXPtFe3h3wju9e2itgEN6yvZ'
+     anon_keys_path = '/ipfs/QmP9jeZhMVbkP3upLZUMyFMwQyBSn783jxq81UmqwXhLRD'
+
+ // get private keys list from ipfs
+ let list = await ipfsLsofPath(anon_keys_path)
+ console.debug(callee+'.list.Links:',list.Links)
+ IRQ_list = list.Links
+ let n = IRQ_list.length;
+ console.debug('main.n:',n);
+
+ // selected one anonymous key
+ var id_int = qm2int(peerid);
+ console.log('main.id_int:',id_int);
+ let i = id_int % n;
+ console.debug(callee+'.i:',i);
+
+ let anon_hash_key = IRQ_list[i].Hash
+ console.debug(callee+'.anon_hash_key:',anon_hash_key);
+ let anon_key = await ipfsGetBinaryByHash(anon_hash_key)
+ console.debug('main.anon_key:',anon_key);
+ //save_private_key(anon_key,anon_name_key);
+
+ anon_name32_key = IRQ_list[i].Name // key_mfxg63s7gazq
+ anon_name_key = base32.decode(IRQ_list[i]['Name'].substr(4))
+ anon_peerkey = await ipfsGetKeyByName(anon_name_key)
+ console.debug(callee+'.anon_peerkey:',anon_peerkey);
+
+ document.getElementById('key').innerHTML=anon_peerkey
+
+ let IRQ_log = [];
+ let htlist = '<ul>'
+ for (let key of IRQ_list) {
+   let name32 = key.Name // key_mfxg63s7gazq
+   let name = base32.decode(name32.substr(4))
+   let peerkey = await ipfsGetKeyByName(name)
+   key.Keyname = name
+   key.Peerkey = peerkey
+
+   let hash_key = key.Hash
+   htlist += `<li><a href=http://localhost:${gw_port}/ipns/${hash_key} title${hash_key}>${name}</a> (${name32}) :`
+          +  ` <a href=http://localhost:${gw_port}/ipns/${peerkey}>/ipns/${peerkey}</a></li>`
+   
+ }
+ console.debug(callee+'.IRQ_list:',IRQ_list);
+
+ htlist += '</ul>'
+ document.getElementById('queue').innerHTML=htlist
+ 
+ htlist = '<ul>'
+ for (let key of IRQ_list) {
+   let peerkey = key.Peerkey
+   let name32 = key.Name // key_mfxg63s7gazq
+   let name = key.Keyname
+   console.debug(callee+'.key:',key);
+   let payload = await ipnsGetContentByKey(peerkey)
+   key.Payload = payload
+   IRQ_log.push(payload)
+   htlist += `<li><a href=http://localhost:${gw_port}/ipfs/${payload}>${payload}</a></li>`
+  
+ }
+ htlist += '</ul>'
+ console.log(callee+'.IRQ_list:',IRQ_list);
+ document.getElementById('payload').innerHTML=htlist
+ console.debug(callee+'.IRQ_log:',IRQ_log);
+
+ 
+
+}
+main();
+
+async function submit(ev) {
+   let [callee, caller] = functionNameJS();
+   let hash_to_submit = document.getElementsByName('hash')[0].value
+      console.debug(callee+'.hash_to_submit:',hash_to_submit);
+   let record_hash = await ipfsAddTextContent(hash_to_submit)
+      console.debug(callee+'.record_hash:',record_hash);
+   ipfsNamePublish(anon_peerkey,record_hash);
+   document.getElementById('record_hash').innerHTML = 
+      `<a href=http://locahost:${gw_port}/ipfs/${record_hash}>${record_hash}</a>`
+   document.getElementById('key').innerHTML = 
+      `<a href=http://locahost:${gw_port}/ipns/${anon_peerkey}>${anon_peerkey}</a>`
+      return record_hash
+}
+
+function save_private_key(data,filename) {
+  let blob = new Blob([data],  {type : 'x-application/stream'})
+  let url = URL.createObjectURL(blob)
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+}
+function qm2int(qm) {
+    let [callee, caller] = functionNameJS();
+    console.debug(callee+'.input.qm:',qm);
+
+    let ui8arr = base58ToBytes(qm,ALPHA58)
+    console.debug(callee+'.ui8arr:',ui8arr)
+    return ((((((+ui8arr[0])*256)+(+ui8arr[1]))*256)+(+ui8arr[2]))*256)+(+ui8arr[3]);
+}
+
+function convertToHex(str) {
+    var hex = '';
+    for(var i=0;i<str.length;i++) {
+        hex += ''+str.charCodeAt(i).toString(16);
+    }
+    return hex;
+}
+
+function decode_base58(str) {
+  let ui8arr = base58ToBytes(str,ALPHA58)
+  let mh = bytesToString(ui8arr)
+  return mh
+}
+
+// https://codereview.stackexchange.com/a/3589/75693
+function bytesToString(bytes) {
+    var chars = [];
+    for(var i = 0, n = bytes.length; i < n;) {
+        chars.push(((bytes[i++] & 0xff) << 8) | (bytes[i++] & 0xff));
+    }
+    return String.fromCharCode.apply(null, chars);
+}
+
+// https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
+function base58ToBytes(
+    S,            //Base58 encoded string input
+    A             //Base58 characters (i.e. "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
+) {
+    console.log('S:',S);
+    console.log('A:',A);
+    var d = [],   //the array for storing the stream of decoded bytes
+        b = [],   //the result byte array that will be returned
+        i,        //the iterator variable for the base58 string
+        j,        //the iterator variable for the byte array (d)
+        c,        //the carry amount variable that is used to overflow from the current byte to the next byte
+        n;        //a temporary placeholder variable for the current byte
+    for(i in S) { //loop through each base58 character in the input string
+        j = 0,                             //reset the byte iterator
+        c = A.indexOf( S[i] );             //set the initial carry amount equal to the current base58 digit
+        //console.log('S['+i+']:',S[i]);
+        //console.log('c:',c);
+        if(c < 0)                          //see if the base58 digit lookup is invalid (-1)
+            return undefined;              //if invalid base58 digit, bail out and return undefined
+        c || b.length ^ i ? i : b.push(0); //prepend the result array with a zero if the base58 digit is zero and non-zero characters haven't been seen yet (to ensure correct decode length)
+        while(j in d || c) {               //start looping through the bytes until there are no more bytes and no carry amount
+            n = d[j];                      //set the placeholder for the current byte
+            n = n ? n * 58 + c : c;        //shift the current byte 58 units and add the carry amount (or just add the carry amount if this is a new byte)
+            c = n >> 8;                    //find the new carry amount (1-byte shift of current byte value)
+            d[j] = n % 256;                //reset the current byte to the remainder (the carry amount will pass on the overflow)
+            j++                            //iterate to the next byte
+        }
+    }
+    while(j--)               //since the byte array is backwards, loop through it in reverse order
+        b.push( d[j] );      //append each byte to the result
+    //console.log('b:',b);
+    return new Uint8Array(b) //return the final byte array in Uint8Array format
+}
+
+</script>

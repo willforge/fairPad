@@ -6,7 +6,11 @@ a.nodeco {
  color: #234;
 }
 textarea#pad_content {
-  width: 90vw;
+  width: 96vw;
+  height: 24em; // rows: 24;
+}
+textarea#prefered_content, textarea#winner_content {
+  width: 46vw;
   height: 24em; // rows: 24;
 }
 table {

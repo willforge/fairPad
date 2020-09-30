@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script>
+let url='https://cdn.jsdelivr.net/gh/willforge/fairPad@master/pad.html'
+//url='https://cdn.statically.io/gh/willforge/fairPad/dbug/pad.txt'
+fetch(url)
+.then(resp => resp.text())
+.then(text => {
+   let p = text.indexOf('<html>')
+   document.getElementsByTagName('html')[0].innerHTML = text.substr(p-1)
+ })
+.catch(console.error)
+</script>
