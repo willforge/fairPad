@@ -51,7 +51,7 @@ for (let i in Object.keys(friendsmap)) {
     let key = Object.keys(friendsmap)[i];
     let friend = friendsmap[key];
     console.log(callee+'.friend.nickname:',friend.nickname);
-    if (friend.nickname != 'francoisc') { continue; }
+    if (friend.nickname != 'francoisc' && friend.nickname != 'emilea') { continue; }
     console.debug(callee+'.friend',friend);
     let peerkey = friend.peerkey;
     let mboxid = getNid('urn:message:to:'+peerid+':from:'+peerkey);

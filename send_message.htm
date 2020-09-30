@@ -32,9 +32,12 @@ recipient:
 
 
 <script>
-  initialize();
+  main();
+async function main() {
+  await initialize();
   buildGroupSelect(groupsmap,'groupsel');
   buildNameSelect('groupsel','nicksel');
+}
    
 async function send(ev) {
   let [callee, caller] = functionNameJS();
